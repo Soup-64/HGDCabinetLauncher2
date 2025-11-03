@@ -12,28 +12,28 @@ using QRCoder;
 
 namespace HGDCabinetLauncher;
 
-public class GameFinder
+public partial class GameFinder
 {
-    
-    [DllImport("user32.dll")]
+
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool SetForegroundWindow(IntPtr hWnd);
+    private static partial bool SetForegroundWindow(IntPtr hWnd);
 
 
 
     public GameMeta[] GameList { get; } //list of game metadata like file paths and information to display
     private bool isRunning; //used to ensure only one game is running at any given time
 
-    public bool getRunning()
+    public bool GetRunning()
     {
         return isRunning;
-    } 
-    
+    }
+
     public GameFinder()
     {
-        
+
         Console.WriteLine("Indexing game metafiles!");
-        
+
         /*
          desktop is used instead of documents because on
          linux C# regards ~/ as the documents folder instead of ~/Documents, maybe some distros don't have ~/Documents
@@ -49,7 +49,7 @@ public class GameFinder
         {
             Console.WriteLine("Could not create or access games folder!");
             Console.WriteLine(err.Message);
-            GameList = Array.Empty<GameMeta>();
+            GameList = [];
             return;
         }
 
@@ -69,7 +69,7 @@ public class GameFinder
             //create empty game meta if deserialization goes sideways
             GameList[i] = JsonConvert.DeserializeObject<GameMeta>(metaStr) ?? new GameMeta();
             GameList[i].ExecLoc = fileList[i][..(fileList[i].Length - 9)];
-            
+
             //load in sample image for game and store it
             try
             {
@@ -84,38 +84,34 @@ public class GameFinder
             {
                 Console.WriteLine("failed to set reference image! using fallback...");
                 Console.WriteLine(err.Message);
-                var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
                 //use embedded fallback resource
-                GameList[i].gameImage = new Bitmap(assets.Open(new Uri("resm:HGDCabinetLauncher.logoHGDRast.png")));
+                GameList[i].gameImage = new Bitmap(AssetLoader.Open(new Uri("resm:HGDCabinetLauncher.logoHGDRast.png")));
             }
             //generate qr code based on metadata link and store it
             try
             {
                 //generate qr code for current game's link
                 QRCodeData codeData = codeGen.CreateQrCode(
-                    GameList[i].Link,
+                    GameList[i].Link ?? "",
                     QRCodeGenerator.ECCLevel.Q);
-                BitmapByteQRCode qrImage = new(codeData);
-                byte[] graphic = qrImage.GetGraphic(10);
+                BitmapByteQRCode qrBitGen = new(codeData);
 
-                using MemoryStream ms = new(graphic);
+                using MemoryStream ms = new(qrBitGen.GetGraphic(10));
                 GameList[i].qrImage = new Bitmap(ms);
                 //dispose ALL the objects!
                 ms.Dispose();
-                qrImage.Dispose();
+                qrBitGen.Dispose();
                 codeData.Dispose();
-                graphic = null;
             }
             catch (Exception err)
             {
                 Console.WriteLine("failed to create qr code, using fallback...");
                 Console.WriteLine(err.Message);
-
-                var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
-                GameList[i].qrImage = new Bitmap(assets.Open(new Uri("resm:HGDCabinetLauncher.logoHGDRast.png")));
+                //TODO: better image to show missing QR code
+                GameList[i].qrImage = new Bitmap(AssetLoader.Open(new Uri("resm:HGDCabinetLauncher.logoHGDRast.png")));
             }
             codeGen.Dispose();
-            
+
             Console.WriteLine($"found data for: {GameList[i].Name}");
         }
 
@@ -123,7 +119,7 @@ public class GameFinder
     }
 
     //false if there was an error running the game
-    public async void playGame(int index)
+    public async void PlayGame(int index)
     {
         if (isRunning) return;
         Console.WriteLine($"Starting game index {index} name \"{GameList[index].Name}\"");
@@ -132,24 +128,27 @@ public class GameFinder
         try
         {
             //for linux make sure binaries have the execution bit set
-            
+
             gameProcess.StartInfo.UseShellExecute = false;
             gameProcess.StartInfo.WorkingDirectory = GameList[index].ExecLoc;
             gameProcess.StartInfo.FileName = GameList[index].ExecLoc + GameList[index].Exec;
             gameProcess.StartInfo.CreateNoWindow = true;
             gameProcess.Start(); //I hope you have your file associations correct!
 
-            for (int i = 0; i < 5; i++)
+            unsafe
             {
-                Thread.Sleep(3000);
-                bool changed = SetForegroundWindow((int) gameProcess.MainWindowHandle);
-                Console.WriteLine($"api returned {changed}");
-                if (changed)
+                for (int i = 0; i < 5; i++)
                 {
-                    Console.WriteLine("focus set correctly!");
-                    break;
+                    Thread.Sleep(3000);
+                    bool changed = SetForegroundWindow((int)gameProcess.MainWindowHandle);
+                    Console.WriteLine($"api returned {changed}");
+                    if (changed)
+                    {
+                        Console.WriteLine("focus set correctly!");
+                        break;
+                    }
+                    Console.WriteLine("focus not set correctly, retrying!");
                 }
-                Console.WriteLine("focus not set correctly, retrying!");
             }
             //using async and await calls instead of the exit event since the
             //event fails to fire if this method finishes, defeating the purpose of using an event at all
@@ -159,7 +158,7 @@ public class GameFinder
             Console.WriteLine("process had an error!");
             Console.WriteLine(e.Message);
         }
-        
+
         await gameProcess.WaitForExitAsync();
         Console.WriteLine("process exited!");
 

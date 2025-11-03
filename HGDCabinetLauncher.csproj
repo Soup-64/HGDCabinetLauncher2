@@ -1,18 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <!--Avalonia doesen't support TrimMode=link currently,but we are working on that https://github.com/AvaloniaUI/Avalonia/issues/6892 -->
-        <TrimMode>copyused</TrimMode>
+        <!-- closed so it should work now -->
+        <!-- <TrimMode>copyused</TrimMode>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <Version>1.1.0</Version>
+         -->
+        <Version>2.0.0</Version>
         <Title>Husky Game Development Arcade Cabinet Launcher 2</Title>
         <Authors>Soup</Authors>
         <Description>Launcher for Husky Game Devlopment's arcade cabinet</Description>
         <PackageIcon>logoHGDRast.png</PackageIcon>
         <RepositoryUrl>https://github.com/Soup-64/HGDCabinetLauncher2</RepositoryUrl>
         <RepositoryType>github</RepositoryType>
-        <OutputType>WinExe</OutputType>
+        <OutputType>Exe</OutputType>
+        <!-- <OutputType>WinExe</OutputType> -->
     </PropertyGroup>
     <ItemGroup>
         <None Remove=".gitignore" />
@@ -29,16 +33,15 @@
         <TrimmableAssembly Include="Avalonia.Themes.Default" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.0.0-preview5" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.0.0-preview5" />
+        <PackageReference Include="Avalonia" Version="11.3.8" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.8" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0-preview5" />
-        <PackageReference Include="Avalonia.Skia" Version="11.0.0-preview5" />
-        <PackageReference Include="Avalonia.Svg" Version="11.0.0-preview5" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.0-preview5" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-        <PackageReference Include="QRCoder" Version="1.4.3" />
-        <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.8" />
+        <PackageReference Include="Avalonia.Skia" Version="11.3.8" />
+        <PackageReference Include="Avalonia.Svg" Version="11.3.0" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.8" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+        <PackageReference Include="QRCoder" Version="1.7.0" />
     </ItemGroup>
     <ItemGroup>
       <None Remove="logoHGD.svg" />

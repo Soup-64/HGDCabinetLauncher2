@@ -93,15 +93,15 @@
                          VerticalAlignment="Top" SelectionMode="Single" Margin="5"
                          FontWeight="Bold"
                          SelectedIndex="0" MinHeight="445"
-                         Loaded="uiList_OnLoaded"
-                         SelectionChanged="uiList_OnSelectionChanged">
+                         Loaded="UiList_OnLoaded"
+                         SelectionChanged="UiList_OnSelectionChanged">
                 </ListBox>
             </Border>
         </Grid>
         <Border Background="#80F2F2F2" CornerRadius="15" BoxShadow="1 1 30 2 Black" Margin="15" Width="250">
             <Button Background="#00F2F2F2" HorizontalAlignment="Center" Content="Press any button to play" Height="40"
                     Width="250"
-                    Click="buttonPlay"  Focusable="False" />
+                    Click="ButtonPlay"  Focusable="False" />
         </Border>
     </StackPanel>
 </Window>

@@ -16,6 +16,6 @@ public class GameMeta
     public string? IconDir;
     public string? ImgDir;
 
-    public Bitmap qrImage;
-    public IImage gameImage;
+    public Bitmap? qrImage;
+    public IImage? gameImage;
 }
