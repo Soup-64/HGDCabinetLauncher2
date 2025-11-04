@@ -11,20 +11,22 @@ using Avalonia.Platform;
 using QRCoder;
 using Avalonia.VisualTree;
 using Avalonia.Controls;
+using System.Collections;
+using System.Linq;
 
 namespace HGDCabinetLauncher;
 
 public partial class GameFinder
 {
 
-//#if _WINDOWS
+    //#if _WINDOWS
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetForegroundWindow(IntPtr hWnd);
 
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool ShowWindow(IntPtr hWnd, int  nCmdShow);
+    private static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
     //#endif
 
     public GameMeta[] GameList { get; } //list of game metadata like file paths and information to display
@@ -149,7 +151,20 @@ public partial class GameFinder
                 for (int i = 0; i < 10; i++)
                 {
                     Thread.Sleep(3000);
-                    
+                    gameProcess.Refresh();
+
+                    Process[] procs = Process.GetProcessesByName(gameProcess.ProcessName);
+                    ArrayList handles = [];
+                    foreach (Process p in procs)
+                    {
+                        if (p.MainWindowHandle != 0)
+                        {
+                            handles.Add(p.MainWindowHandle);
+                            Console.WriteLine($"child handle: {p.MainWindowHandle}");
+                        }
+                    }
+                    Console.WriteLine($"Checked {procs.Length} procs, found {handles.Count} window handles");
+
                     bool changed = SetForegroundWindow(gameProcess.MainWindowHandle);
                     Console.WriteLine($"api returned {changed} (handle is {gameProcess.MainWindowHandle})");
                     if (changed)
@@ -160,9 +175,9 @@ public partial class GameFinder
                     Console.WriteLine("focus not set correctly, retrying!");
                 }
             }
-//#else
+            //#else
             Console.WriteLine("skipping foreground set, not on Windows!");
-//#endif
+            //#endif
             //using async and await calls instead of the exit event since the
             //event fails to fire if this method finishes, defeating the purpose of using an event at all
             await gameProcess.WaitForExitAsync();
