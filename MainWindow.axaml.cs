@@ -62,7 +62,7 @@ namespace HGDCabinetLauncher
         private void ButtonPlay(object? sender, RoutedEventArgs e)
         {
             if (_finder.GetRunning()) return;
-            _finder.PlayGame(uiList.SelectedIndex);
+            _finder.PlayGame(uiList.SelectedIndex, this);
         }
 
         //handling input for moving along the list of games in the interface
@@ -89,7 +89,7 @@ namespace HGDCabinetLauncher
                     //only default to any key if no modifiers are pressed
                     if (e.Key is >= Key.A and <= Key.Z)
                     {
-                        _finder.PlayGame(uiList.SelectedIndex);
+                        _finder.PlayGame(uiList.SelectedIndex, this);
                         //this.WindowState = WindowState.Minimized;
                     }
                     break;

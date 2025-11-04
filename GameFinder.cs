@@ -9,21 +9,26 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using QRCoder;
+using Avalonia.VisualTree;
+using Avalonia.Controls;
 
 namespace HGDCabinetLauncher;
 
 public partial class GameFinder
 {
 
+//#if _WINDOWS
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetForegroundWindow(IntPtr hWnd);
 
-
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool ShowWindow(IntPtr hWnd, int  nCmdShow);
+    //#endif
 
     public GameMeta[] GameList { get; } //list of game metadata like file paths and information to display
     private bool isRunning; //used to ensure only one game is running at any given time
-
     public bool GetRunning()
     {
         return isRunning;
@@ -119,7 +124,7 @@ public partial class GameFinder
     }
 
     //false if there was an error running the game
-    public async void PlayGame(int index)
+    public async void PlayGame(int index, Control c)
     {
         if (isRunning) return;
         Console.WriteLine($"Starting game index {index} name \"{GameList[index].Name}\"");
@@ -133,15 +138,20 @@ public partial class GameFinder
             gameProcess.StartInfo.WorkingDirectory = GameList[index].ExecLoc;
             gameProcess.StartInfo.FileName = GameList[index].ExecLoc + GameList[index].Exec;
             gameProcess.StartInfo.CreateNoWindow = true;
+            gameProcess.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
             gameProcess.Start(); //I hope you have your file associations correct!
+            nint self = TopLevel.GetTopLevel(c).TryGetPlatformHandle().Handle;
 
+            //ShowWindow(self, 6); //SW_MINIMIZE
+            //#if _WINDOWS
             unsafe
             {
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     Thread.Sleep(3000);
-                    bool changed = SetForegroundWindow((int)gameProcess.MainWindowHandle);
-                    Console.WriteLine($"api returned {changed}");
+                    
+                    bool changed = SetForegroundWindow(gameProcess.MainWindowHandle);
+                    Console.WriteLine($"api returned {changed} (handle is {gameProcess.MainWindowHandle})");
                     if (changed)
                     {
                         Console.WriteLine("focus set correctly!");
@@ -150,17 +160,19 @@ public partial class GameFinder
                     Console.WriteLine("focus not set correctly, retrying!");
                 }
             }
+//#else
+            Console.WriteLine("skipping foreground set, not on Windows!");
+//#endif
             //using async and await calls instead of the exit event since the
             //event fails to fire if this method finishes, defeating the purpose of using an event at all
+            await gameProcess.WaitForExitAsync();
+            Console.WriteLine($"process exited! (code {gameProcess.ExitCode})");
         }
         catch (Exception e)
         {
             Console.WriteLine("process had an error!");
             Console.WriteLine(e.Message);
         }
-
-        await gameProcess.WaitForExitAsync();
-        Console.WriteLine("process exited!");
 
         isRunning = false;
     }
