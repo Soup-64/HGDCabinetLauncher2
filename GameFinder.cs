@@ -19,7 +19,7 @@ namespace HGDCabinetLauncher;
 public partial class GameFinder
 {
 
-    //#if _WINDOWS
+    #if _WINDOWS
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetForegroundWindow(IntPtr hWnd);
@@ -27,7 +27,7 @@ public partial class GameFinder
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
-    //#endif
+    #endif
 
     public GameMeta[] GameList { get; } //list of game metadata like file paths and information to display
     private bool isRunning; //used to ensure only one game is running at any given time
@@ -145,7 +145,7 @@ public partial class GameFinder
             nint self = TopLevel.GetTopLevel(c).TryGetPlatformHandle().Handle;
 
             //ShowWindow(self, 6); //SW_MINIMIZE
-            //#if _WINDOWS
+            #if _WINDOWS
             unsafe
             {
                 for (int i = 0; i < 10; i++)
@@ -175,9 +175,9 @@ public partial class GameFinder
                     Console.WriteLine("focus not set correctly, retrying!");
                 }
             }
-            //#else
+            #else
             Console.WriteLine("skipping foreground set, not on Windows!");
-            //#endif
+            #endif
             //using async and await calls instead of the exit event since the
             //event fails to fire if this method finishes, defeating the purpose of using an event at all
             await gameProcess.WaitForExitAsync();
